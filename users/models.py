@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 
 class User(AbstractUser):
-    email = models.EmailField(unique=True)
+    email = models.EmailField(unique=True, null=True, blank=True)
     username = models.CharField(max_length=150, unique=True)
     role = models.CharField(max_length=20, default='customer')
     is_verified = models.BooleanField(default=False)
