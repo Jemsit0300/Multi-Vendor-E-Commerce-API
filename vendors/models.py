@@ -1,8 +1,7 @@
 from django.db import models
-from users.models import User
 
 class Vendor(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='vendor_profile')
+    user = models.OneToOneField('users.User', on_delete=models.CASCADE, related_name='vendor_profile')
     store_name = models.CharField(max_length=255)
     store_description = models.TextField(blank=True, null=True)
     store_logo = models.ImageField(upload_to='vendor_logos/', blank=True, null=True)
