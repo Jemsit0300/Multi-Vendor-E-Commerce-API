@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.env
+venv/
+.venv/
+
+media/
+db.sqlite3
+staticfiles/
+static/
+*.xlsx
+*.json
