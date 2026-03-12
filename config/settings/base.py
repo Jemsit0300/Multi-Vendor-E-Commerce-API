@@ -34,6 +34,8 @@ INSTALLED_APPS = [
     'orders',
     'reviews',
     'cart',
+
+    'drf_spectacular',
 ]
 
 MIDDLEWARE = [
@@ -108,3 +110,13 @@ AUTH_USER_MODEL = 'users.User'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'E-commerce API',
+    'DESCRIPTION': 'API documentation for the E-commerce platform',
+    'VERSION': '1.0.0',
+}
