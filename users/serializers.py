@@ -6,14 +6,15 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('username', 'email', 'password')
+        fields = ('username', 'email', 'password', 'role')
 
     def create(self, validated_data):
         email = validated_data.get('email')
         user = User.objects.create_user(
             username=validated_data['username'],
             email=email,
-            password=validated_data['password']
+            password=validated_data['password'],
+            role=validated_data['role']
         )
         if email is None:
             user.email = None
