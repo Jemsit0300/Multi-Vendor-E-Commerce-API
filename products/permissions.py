@@ -29,6 +29,14 @@ class ProductPermission(permissions.BasePermission):
             return True
 
         if action in ["create", "update", "partial_update", "destroy"]:
+            if not request.user or not request.user.is_authenticated:
+                return False
+
+            # Admin can manage all products.
+            if request.user.is_staff or request.user.is_superuser:
+                return True
+
+            # Vendors can write only if approved.
             return IsApprovedVendor().has_permission(request, view)
 
         return False
@@ -36,10 +44,12 @@ class ProductPermission(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         action = getattr(view, "action", None)
 
-        if action in ["retrieve"]:
+        if action == "retrieve":
             return True
 
         if action in ["update", "partial_update", "destroy"]:
+            if request.user.is_staff or request.user.is_superuser:
+                return True
             return obj.vendor_id == request.user.id
 
         return True
