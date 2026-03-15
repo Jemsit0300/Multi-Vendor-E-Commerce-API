@@ -29,7 +29,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     permission_classes = [ProductPermission]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['category', 'price']
-    search_fields = ['name']
+    search_fields = ['name', 'description']
 
 
     def perform_create(self, serializer):
