@@ -1,3 +1,4 @@
+from datetime import timedelta
 from pathlib import Path
 import os
 
@@ -127,4 +128,9 @@ SPECTACULAR_SETTINGS = {
     'TITLE': 'E-commerce API',
     'DESCRIPTION': 'API documentation for the E-commerce platform',
     'VERSION': '1.0.0',
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),        
 }

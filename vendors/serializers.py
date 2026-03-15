@@ -9,7 +9,7 @@ class VendorSerializer(serializers.ModelSerializer):
         write_only=True,
         required=False,
     )
-
+    user = serializers.StringRelatedField(read_only=True)
     class Meta:
         model = Vendor
         fields = ('id', 'user', 'user_id', 'store_name', 'store_description', 'store_logo', 'is_approved', 'created_at')
