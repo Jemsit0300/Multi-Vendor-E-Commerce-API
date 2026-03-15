@@ -8,6 +8,7 @@ from .models import Category, Product, ProductImage
 from .permissions import CategoryPermission, ProductPermission
 from .serializers import CategorySerializer, MultipleImageUploadSerializer, ProductImageSerializer, ProductSerializer
 from rest_framework.generics import DestroyAPIView
+from django_filters.rest_framework import DjangoFilterBackend
 
 
 class ProductCreateView(APIView):
@@ -24,6 +25,9 @@ class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [ProductPermission]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['category']
+
 
     def perform_create(self, serializer):
         serializer.save(vendor=self.request.user)
