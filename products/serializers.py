@@ -12,6 +12,11 @@ class ProductImageSerializer(serializers.ModelSerializer):
         model = ProductImage
         fields = ('id', 'product', 'image', 'alt_text', 'created_at')
 
+class MultipleImageUploadSerializer(serializers.Serializer):
+    images = serializers.ListField(
+        child=serializers.ImageField()
+    )
+
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
