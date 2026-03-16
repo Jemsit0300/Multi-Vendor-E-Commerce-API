@@ -12,7 +12,6 @@ def mock_payment(request, order_id):
     except Order.DoesNotExist:
         return Response({"error": "Order not found"}, status=404)
 
-    # simulate payment success or failure
     payment_success = random.choice([True, False])
 
     if payment_success:
