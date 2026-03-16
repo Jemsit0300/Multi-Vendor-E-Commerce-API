@@ -9,6 +9,7 @@ class CartViewSet(viewsets.ModelViewSet):
     queryset = Cart.objects.all()
     serializer_class = CartSerializer
     permission_classes = [permissions.IsAuthenticated]
+    
 
 class CartItemViewSet(viewsets.ModelViewSet):
     queryset = CartItem.objects.all()

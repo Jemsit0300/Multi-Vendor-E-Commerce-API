@@ -1,7 +1,10 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
-from .models import Order
+from rest_framework.response import Response
+
+from .models import Order, OrderItem
 from .serializers import OrderSerializer
+from cart.models import Cart
 
 
 class OrderViewSet(viewsets.ModelViewSet):
@@ -23,6 +26,49 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         return Order.objects.filter(user=user)
 
-    def perform_create(self, serializer):
+    def create(self, request):
 
-        serializer.save(user=self.request.user)
+        cart = Cart.objects.filter(user=request.user).first()
+
+        if not cart:
+            return Response(
+                {"error": "Cart not found"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not cart.items.exists():
+            return Response(
+                {"error": "Cart is empty"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        order = Order.objects.create(
+            user=request.user,
+            status="pending"
+        )
+
+        for item in cart.items.all():
+
+            product = item.product
+
+            if product.stock < item.quantity:
+                return Response(
+                    {"error": f"{product.name} out of stock"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            OrderItem.objects.create(
+                order=order,
+                product=product,
+                quantity=item.quantity,
+                price=product.price
+            )
+
+            product.stock -= item.quantity
+            product.save()
+
+        cart.items.all().delete()
+
+        serializer = OrderSerializer(order)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
