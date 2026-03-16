@@ -42,6 +42,13 @@ class OrderViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        for item in cart.items.all():
+            if item.product.stock < item.quantity:
+                return Response(
+                    {"error": f"{item.product.name} out of stock"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
         order = Order.objects.create(
             user=request.user,
             status="pending"
@@ -50,12 +57,6 @@ class OrderViewSet(viewsets.ModelViewSet):
         for item in cart.items.all():
 
             product = item.product
-
-            if product.stock < item.quantity:
-                return Response(
-                    {"error": f"{product.name} out of stock"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
 
             OrderItem.objects.create(
                 order=order,
