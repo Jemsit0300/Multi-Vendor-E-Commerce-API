@@ -1,33 +1,75 @@
-import random
-from rest_framework.decorators import api_view
+from rest_framework import viewsets, status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import status
-from .models import Order
+
+from .models import Order, OrderItem
+from .serializers import OrderSerializer
+from cart.models import Cart
 
 
-@api_view(["POST"])
-def mock_payment(request, order_id):
-    try:
-        order = Order.objects.get(id=order_id)
-    except Order.DoesNotExist:
-        return Response({"error": "Order not found"}, status=404)
+class OrderViewSet(viewsets.ModelViewSet):
 
-    payment_success = random.choice([True, False])
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
 
-    if payment_success:
-        order.status = "pending_shipment"
-        order.save()
+    def get_queryset(self):
 
-        return Response({
-            "message": "Payment successful",
-            "order_status": order.status
-        })
+        user = self.request.user
 
-    else:
-        order.status = "payment_failed"
-        order.save()
+        if user.is_staff:
+            return Order.objects.all()
 
-        return Response({
-            "message": "Payment failed",
-            "order_status": order.status
-        }, status=status.HTTP_400_BAD_REQUEST)
+        if user.role == "vendor":
+            return Order.objects.filter(
+                items__product__vendor=user
+            ).distinct()
+
+        return Order.objects.filter(user=user)
+
+    def create(self, request):
+
+        cart = Cart.objects.filter(user=request.user).first()
+
+        if not cart:
+            return Response(
+                {"error": "Cart not found"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not cart.items.exists():
+            return Response(
+                {"error": "Cart is empty"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        for item in cart.items.all():
+            if item.product.stock < item.quantity:
+                return Response(
+                    {"error": f"{item.product.name} out of stock"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        order = Order.objects.create(
+            user=request.user,
+            status="pending"
+        )
+
+        for item in cart.items.all():
+
+            product = item.product
+
+            OrderItem.objects.create(
+                order=order,
+                product=product,
+                quantity=item.quantity,
+                price=product.price
+            )
+
+            product.stock -= item.quantity
+            product.save()
+
+        cart.items.all().delete()
+
+        serializer = OrderSerializer(order)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
