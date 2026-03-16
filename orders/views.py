@@ -13,17 +13,14 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         user = self.request.user
 
-        # Admin
         if user.is_staff:
             return Order.objects.all()
 
-        # Vendor
         if user.role == "vendor":
             return Order.objects.filter(
                 items__product__vendor=user
             ).distinct()
 
-        # Customer
         return Order.objects.filter(user=user)
 
     def perform_create(self, serializer):
