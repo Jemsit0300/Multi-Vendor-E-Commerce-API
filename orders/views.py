@@ -1,33 +1,31 @@
-import random
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
 from .models import Order
+from .serializers import OrderSerializer
 
 
-@api_view(["POST"])
-def mock_payment(request, order_id):
-    try:
-        order = Order.objects.get(id=order_id)
-    except Order.DoesNotExist:
-        return Response({"error": "Order not found"}, status=404)
+class OrderViewSet(viewsets.ModelViewSet):
 
-    payment_success = random.choice([True, False])
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
 
-    if payment_success:
-        order.status = "pending_shipment"
-        order.save()
+    def get_queryset(self):
 
-        return Response({
-            "message": "Payment successful",
-            "order_status": order.status
-        })
+        user = self.request.user
 
-    else:
-        order.status = "payment_failed"
-        order.save()
+        # Admin
+        if user.is_staff:
+            return Order.objects.all()
 
-        return Response({
-            "message": "Payment failed",
-            "order_status": order.status
-        }, status=status.HTTP_400_BAD_REQUEST)
+        # Vendor
+        if user.role == "vendor":
+            return Order.objects.filter(
+                items__product__vendor=user
+            ).distinct()
+
+        # Customer
+        return Order.objects.filter(user=user)
+
+    def perform_create(self, serializer):
+
+        serializer.save(user=self.request.user)
