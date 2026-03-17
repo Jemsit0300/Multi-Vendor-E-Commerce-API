@@ -52,7 +52,6 @@ class OrderViewSet(viewsets.ModelViewSet):
             status="created"
         )
 
-        # Move cart → order
         for item in cart.items.all():
 
             product = item.product
