@@ -39,7 +39,6 @@ class OrderViewSet(viewsets.ModelViewSet):
         if not cart.items.exists():
             return Response({"error": "Cart is empty"}, status=400)
 
-        # Stock check
         for item in cart.items.all():
             if item.product.stock < item.quantity:
                 return Response(
