@@ -89,7 +89,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         success = PaymentService.process_payment(order, request.data)
 
         if success:
-            order.status = "pending_shipment"   # or "paid"
+            order.status = "pending_shipment"  
             order.save()
 
             return Response({
