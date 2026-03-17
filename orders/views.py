@@ -47,7 +47,6 @@ class OrderViewSet(viewsets.ModelViewSet):
                     status=400
                 )
 
-        # Create order
         order = Order.objects.create(
             user=request.user,
             status="created"
