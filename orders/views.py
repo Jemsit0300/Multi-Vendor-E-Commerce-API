@@ -66,7 +66,6 @@ class OrderViewSet(viewsets.ModelViewSet):
             product.stock -= item.quantity
             product.save()
 
-        # Clear cart
         cart.items.all().delete()
 
         serializer = OrderSerializer(order)
