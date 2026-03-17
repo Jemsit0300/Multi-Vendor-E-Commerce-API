@@ -4,8 +4,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .models import Order, OrderItem
-from .permissions import IsOwnerVendorOrAdmin
 from .serializers import OrderSerializer
+from .services import PaymentService
+
 from cart.models import Cart
 
 
@@ -33,27 +34,21 @@ class OrderViewSet(viewsets.ModelViewSet):
         cart = Cart.objects.filter(user=request.user).first()
 
         if not cart:
-            return Response(
-                {"error": "Cart not found"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"error": "Cart not found"}, status=400)
 
         if not cart.items.exists():
-            return Response(
-                {"error": "Cart is empty"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"error": "Cart is empty"}, status=400)
 
         for item in cart.items.all():
             if item.product.stock < item.quantity:
                 return Response(
                     {"error": f"{item.product.name} out of stock"},
-                    status=status.HTTP_400_BAD_REQUEST
+                    status=400
                 )
 
         order = Order.objects.create(
             user=request.user,
-            status="pending"
+            status="created"
         )
 
         for item in cart.items.all():
@@ -74,4 +69,38 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         serializer = OrderSerializer(order)
 
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.data, status=201)
+
+    @action(detail=True, methods=["post"])
+    def pay(self, request, pk=None):
+
+        try:
+            order = self.get_queryset().get(pk=pk)
+        except Order.DoesNotExist:
+            return Response({"error": "Order not found"}, status=404)
+
+        if order.status in ["paid", "pending_shipment"]:
+            return Response(
+                {"error": "Order already paid"},
+                status=400
+            )
+
+        success = PaymentService.process_payment(order, request.data)
+
+        if success:
+            order.status = "pending_shipment"  
+            order.save()
+
+            return Response({
+                "message": "Payment successful",
+                "order_status": order.status
+            })
+
+        else:
+            order.status = "payment_failed"
+            order.save()
+
+            return Response({
+                "message": "Payment failed",
+                "order_status": order.status
+            }, status=400)
