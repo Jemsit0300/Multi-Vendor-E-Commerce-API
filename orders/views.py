@@ -80,7 +80,6 @@ class OrderViewSet(viewsets.ModelViewSet):
         except Order.DoesNotExist:
             return Response({"error": "Order not found"}, status=404)
 
-        # Prevent duplicate payment
         if order.status in ["paid", "pending_shipment"]:
             return Response(
                 {"error": "Order already paid"},
