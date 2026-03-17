@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from .models import Order, OrderItem
 from .serializers import OrderSerializer
 from .services import PaymentService
+from .email_service import EmailService
 
 from cart.models import Cart
 
@@ -90,6 +91,8 @@ class OrderViewSet(viewsets.ModelViewSet):
         if success:
             order.status = "pending_shipment"  
             order.save()
+
+            EmailService.send_order_confirmation(order)
 
             return Response({
                 "message": "Payment successful",
