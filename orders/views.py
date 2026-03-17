@@ -86,7 +86,6 @@ class OrderViewSet(viewsets.ModelViewSet):
                 status=400
             )
 
-        # 🔹 Call mock payment service
         success = PaymentService.process_payment(order, request.data)
 
         if success:
