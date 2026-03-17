@@ -2,6 +2,9 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from products.models import Product
 from vendors.models import Vendor
+from django.db.models import Sum, F
+from datetime import timedelta
+from django.utils import timezone
 
 User = get_user_model()
 
@@ -20,6 +23,14 @@ class Order(models.Model):
 
     def __str__(self):
         return f"Order {self.id}"
+
+    def get_total_price(self):
+        return self.items.aggregate(
+            total=Sum(F("price") * F("quantity"))
+        )["total"] or 0
+
+    def get_estimated_delivery(self):
+        return timezone.now() + timedelta(days=5)
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
