@@ -29,7 +29,6 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         return Order.objects.filter(user=user)
 
-    # 🛒 CREATE ORDER
     def create(self, request):
 
         cart = Cart.objects.filter(user=request.user).first()
