@@ -63,7 +63,6 @@ class OrderViewSet(viewsets.ModelViewSet):
                 price=product.price
             )
 
-            # Reduce stock
             product.stock -= item.quantity
             product.save()
 
