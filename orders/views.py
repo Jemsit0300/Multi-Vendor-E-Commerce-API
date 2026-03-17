@@ -72,7 +72,6 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data, status=201)
 
-    # 💳 MOCK PAYMENT ENDPOINT
     @action(detail=True, methods=["post"])
     def pay(self, request, pk=None):
 
