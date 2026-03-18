@@ -29,3 +29,22 @@ class StockService:
 
             product.stock -= item.quantity
             product.save()
+
+    @staticmethod
+    @transaction.atomic
+    def reduce_stock_partial(order):
+        """
+        Reduce stock only for items that currently have enough stock.
+        Returns the list of order items that were successfully reduced.
+        """
+        available_items = []
+
+        for item in order.items.select_for_update():
+            product = item.product
+
+            if product.stock >= item.quantity:
+                product.stock -= item.quantity
+                product.save()
+                available_items.append(item)
+
+        return available_items
