@@ -8,6 +8,7 @@ from .serializers import OrderSerializer
 from .services import PaymentService
 from .email_service import EmailService
 from services.notification_service import NotificationService
+from services.stock_service import StockService
 
 from cart.models import Cart
 
@@ -41,13 +42,6 @@ class OrderViewSet(viewsets.ModelViewSet):
         if not cart.items.exists():
             return Response({"error": "Cart is empty"}, status=400)
 
-        for item in cart.items.all():
-            if item.product.stock < item.quantity:
-                return Response(
-                    {"error": f"{item.product.name} out of stock"},
-                    status=400
-                )
-
         order = Order.objects.create(
             user=request.user,
             status="created"
@@ -63,9 +57,6 @@ class OrderViewSet(viewsets.ModelViewSet):
                 quantity=item.quantity,
                 price=product.price
             )
-
-            product.stock -= item.quantity
-            product.save()
 
         cart.items.all().delete()
 
@@ -87,25 +78,46 @@ class OrderViewSet(viewsets.ModelViewSet):
                 status=400
             )
 
-        success = PaymentService.process_payment(order, request.data)
+        valid, product_name = StockService.validate_stock(order)
 
-        if success:
-            order.status = "pending_shipment"  
-            order.save()
-
-            EmailService.send_order_confirmation(order)
-            NotificationService.notify_vendors(order)
-
-            return Response({
-                "message": "Payment successful",
-                "order_status": order.status
-            })
-
-        else:
+        if not valid:
             order.status = "payment_failed"
             order.save()
 
             return Response({
-                "message": "Payment failed",
+                "error": f"{product_name} is out of stock",
                 "order_status": order.status
             }, status=400)
+
+        success = PaymentService.process_payment(order, request.data)
+
+        if not success:
+            order.status = "payment_failed"
+            order.save()
+
+            return Response({
+                "error": "Payment failed",
+                "order_status": order.status
+            }, status=400)
+
+        try:
+            StockService.reduce_stock(order)
+        except Exception as e:
+            order.status = "payment_failed"
+            order.save()
+
+            return Response({
+                "error": str(e),
+                "order_status": order.status
+            }, status=400)
+
+        order.status = "pending_shipment"
+        order.save()
+
+        EmailService.send_order_confirmation(order)
+        NotificationService.notify_vendors(order)
+
+        return Response({
+            "message": "Payment successful",
+            "order_status": order.status
+        })
