@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Order, OrderItem
+from .models import Notification, Order, OrderItem
 
 class OrderSerializer(serializers.ModelSerializer):
     class Meta:
@@ -12,3 +12,9 @@ class OrderItemSerializer(serializers.ModelSerializer):
         model = OrderItem
         fields = ['id', 'order', 'product', 'vendor', 'quantity', 'price']
         read_only_fields = ['price']
+
+class NotificationSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Notification
+        fields = ["id", "message", "type", "is_read", "created_at"]
