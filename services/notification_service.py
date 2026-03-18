@@ -12,7 +12,6 @@ class NotificationService:
 
             vendor = item.product.vendor
 
-            # Prevent duplicate notifications
             if vendor.id in notified_vendors:
                 continue
 
