@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'orders',
     'reviews',
     'cart',
+    'services',
 
     'drf_spectacular',
     'rest_framework_simplejwt',
