@@ -7,6 +7,7 @@ from .models import Order, OrderItem
 from .serializers import OrderSerializer
 from .services import PaymentService
 from .email_service import EmailService
+from services.notification_service import NotificationService
 
 from cart.models import Cart
 
@@ -93,6 +94,7 @@ class OrderViewSet(viewsets.ModelViewSet):
             order.save()
 
             EmailService.send_order_confirmation(order)
+            NotificationService.notify_vendors(order)
 
             return Response({
                 "message": "Payment successful",
