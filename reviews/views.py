@@ -10,9 +10,13 @@ from products.models import Product
 from .models import Review
 from .serializers import ReviewSerializer
 
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters
 
 class ProductReviewListCreateAPIView(ListCreateAPIView):
 	serializer_class = ReviewSerializer
+	filter_backends = [DjangoFilterBackend]
+	filterset_fields = ['rating']
 
 	def get_permissions(self):
 		if self.request.method == "POST":
