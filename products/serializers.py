@@ -11,7 +11,9 @@ class ProductSerializer(serializers.ModelSerializer):
         read_only_fields = ('vendor', 'created_at', 'updated_at')
 
     def get_avg_rating(self, obj):
-        avg = obj.reviews.aggregate(Avg('rating'))['rating__avg']
+        avg = getattr(obj, 'avg_rating', None)
+        if avg is None:
+            avg = obj.reviews.aggregate(Avg('rating'))['rating__avg']
         return round(avg, 2) if avg is not None else None
 
 class ProductImageSerializer(serializers.ModelSerializer):
