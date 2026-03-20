@@ -39,6 +39,8 @@ class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [CategoryPermission]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['name']
 
 class ProductImageView(APIView):
 
