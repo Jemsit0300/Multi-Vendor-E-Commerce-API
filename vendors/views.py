@@ -6,6 +6,7 @@ from rest_framework.views import APIView
 from .models import Vendor
 from .serializers import VendorSerializer
 from .permissions import IsVendor
+from django_filters.rest_framework import DjangoFilterBackend
 
 
 class IsVendorOwnerOrAdmin(BasePermission):
@@ -21,6 +22,8 @@ class IsVendorOwnerOrAdmin(BasePermission):
 class VendorListCreateView(generics.ListCreateAPIView):
     serializer_class = VendorSerializer
     permission_classes = [IsVendorOwnerOrAdmin]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['name']
 
     def get_queryset(self):
         if self.request.user.is_staff:
