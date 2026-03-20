@@ -39,7 +39,6 @@ class ProductCreateView(APIView):
         return Response(serializer.errors, status=400)
 
 class ProductViewSet(viewsets.ModelViewSet):
-    queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [ProductPermission]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -47,7 +46,9 @@ class ProductViewSet(viewsets.ModelViewSet):
     search_fields = ['name', 'description']
     ordering_fields = ['price', 'created_at', 'avg_rating']
     ordering = ['-created_at']
-    
+
+    def get_queryset(self):
+        return Product.objects.annotate(avg_rating=Avg('reviews__rating'))
 
 
     def perform_create(self, serializer):
