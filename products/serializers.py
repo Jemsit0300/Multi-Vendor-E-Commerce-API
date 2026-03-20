@@ -1,11 +1,18 @@
 from rest_framework import serializers
+from django.db.models import Avg
 from .models import Category, Product, ProductImage
 
 class ProductSerializer(serializers.ModelSerializer):
+    avg_rating = serializers.SerializerMethodField()
+
     class Meta:
         model = Product
-        fields = ('id', 'vendor', 'name', 'description', 'price', 'stock', 'category', 'created_at', 'updated_at')
+        fields = ('id', 'vendor', 'name', 'description', 'price', 'stock', 'category', 'avg_rating', 'created_at', 'updated_at')
         read_only_fields = ('vendor', 'created_at', 'updated_at')
+
+    def get_avg_rating(self, obj):
+        avg = obj.reviews.aggregate(Avg('rating'))['rating__avg']
+        return round(avg, 2) if avg is not None else None
 
 class ProductImageSerializer(serializers.ModelSerializer):
     class Meta:

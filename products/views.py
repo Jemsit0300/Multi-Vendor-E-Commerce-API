@@ -1,4 +1,5 @@
 import django_filters
+from django.db.models import Avg
 from rest_framework import filters
 from rest_framework import permissions, viewsets
 from rest_framework.response import Response
@@ -11,6 +12,20 @@ from .permissions import CategoryPermission, ProductPermission
 from .serializers import CategorySerializer, MultipleImageUploadSerializer, ProductImageSerializer, ProductSerializer
 from rest_framework.generics import DestroyAPIView
 from django_filters.rest_framework import DjangoFilterBackend
+
+
+class ProductFilter(django_filters.FilterSet):
+    min_price = django_filters.NumberFilter(field_name='price', lookup_expr='gte')
+    max_price = django_filters.NumberFilter(field_name='price', lookup_expr='lte')
+    rating = django_filters.NumberFilter(method='filter_by_rating')
+    vendor = django_filters.CharFilter(field_name='vendor__username', lookup_expr='icontains')
+
+    class Meta:
+        model = Product
+        fields = ['category', 'vendor']
+
+    def filter_by_rating(self, queryset, name, value):
+        return queryset.annotate(avg_rating=Avg('reviews__rating')).filter(avg_rating__gte=value)
 
 
 class ProductCreateView(APIView):
@@ -28,7 +43,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     serializer_class = ProductSerializer
     permission_classes = [ProductPermission]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['category', 'price']
+    filterset_class = ProductFilter
     search_fields = ['name', 'description']
 
 
@@ -39,6 +54,8 @@ class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [CategoryPermission]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['name']
 
 class ProductImageView(APIView):
 

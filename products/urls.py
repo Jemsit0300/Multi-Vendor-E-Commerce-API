@@ -13,6 +13,11 @@ router.register(r'products', ProductViewSet, basename='products')
 
 urlpatterns = [
     path('', include(router.urls)),
+    path(
+        "api/products/",
+        ProductViewSet.as_view({"get": "list"}),
+        name="products-search",
+    ),
    
     path(
         "api/products/<int:product_id>/images/",
