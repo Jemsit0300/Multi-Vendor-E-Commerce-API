@@ -48,7 +48,12 @@ class ProductViewSet(viewsets.ModelViewSet):
     ordering = ['-created_at']
 
     def get_queryset(self):
-        return Product.objects.annotate(avg_rating=Avg('reviews__rating'))
+        return (
+            Product.objects
+            .select_related('vendor')
+            .prefetch_related('reviews')
+            .annotate(avg_rating=Avg('reviews__rating'))
+        )
 
 
     def perform_create(self, serializer):
