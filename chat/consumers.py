@@ -4,6 +4,7 @@ from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 
 from .models import ChatRoom, Message
+from .presence import mark_user_offline, mark_user_online
 
 
 class ChatConsumer(WebsocketConsumer):
@@ -26,11 +27,16 @@ class ChatConsumer(WebsocketConsumer):
 
         self.room = room
         self.room_group_name = f'chat_room_{room.id}'
+        self.user_id = user.id
 
         async_to_sync(self.channel_layer.group_add)(self.room_group_name, self.channel_name)
+        mark_user_online(self.user_id, self.channel_name)
         self.accept()
 
     def disconnect(self, close_code):
+        if hasattr(self, 'user_id'):
+            mark_user_offline(self.user_id, self.channel_name)
+
         if hasattr(self, 'room_group_name'):
             async_to_sync(self.channel_layer.group_discard)(self.room_group_name, self.channel_name)
 
