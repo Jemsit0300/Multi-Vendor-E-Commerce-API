@@ -72,24 +72,24 @@ class ErrorHandlingTestCase(APITestCase):
                 'name': 'Test Product',
                 'price': 99.99,
                 'description': 'Test'
-            }
+                        response = self.client.get('/orders/orders/')
         )
         
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(response.data['code'], 'permission_denied')
-        self.assertEqual(response.data['status'], 403)
+                        response = self.client.get('/orders/orders/')
         self.assertIn('error', response.data)
 
     def test_vendor_can_create_product(self):
         """Test vendor can create product (positive case)"""
         self.client.force_authenticate(self.vendor_user)
-        
+                        response = self.client.get('/products/99999/')
         response = self.client.post(
             '/api/products/',
             {
                 'name': 'Test Product',
                 'price': 99.99,
-                'description': 'Test'
+                        response = self.client.get('/orders/orders/99999/')
             }
         )
         
@@ -102,8 +102,8 @@ class ErrorHandlingTestCase(APITestCase):
 
     def test_product_not_found(self):
         """Test 404 error for non-existent product"""
-        self.client.force_authenticate(self.user)
-        
+                        response = self.client.post(
+                            '/products/',
         response = self.client.get('/api/products/99999/')
         
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -112,7 +112,7 @@ class ErrorHandlingTestCase(APITestCase):
         self.assertIn('error', response.data)
         self.assertEqual(response.data['error'], 'Not found.')
 
-    def test_order_not_found(self):
+                            '/products/',
         """Test 404 error for non-existent order"""
         self.client.force_authenticate(self.user)
         
@@ -124,7 +124,7 @@ class ErrorHandlingTestCase(APITestCase):
     def test_chat_room_not_found(self):
         """Test 404 error for non-existent chat room"""
         self.client.force_authenticate(self.user)
-        
+                            '/users/register/',
         response = self.client.get('/api/chat/rooms/99999/')
         
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -137,14 +137,14 @@ class ErrorHandlingTestCase(APITestCase):
     def test_validation_error_missing_field(self):
         """Test 400 error for missing required field"""
         self.client.force_authenticate(self.vendor_user)
-        
+                        response = self.client.delete('/orders/orders/')
         # Missing 'name' and 'price' fields
         response = self.client.post(
             '/api/products/',
             {'description': 'Missing required fields'}
         )
         
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+                            '/products/',
         self.assertEqual(response.data['code'], 'validation_error')
         self.assertEqual(response.data['status'], 400)
         self.assertIn('error', response.data)
@@ -157,7 +157,7 @@ class ErrorHandlingTestCase(APITestCase):
         self.client.force_authenticate(self.vendor_user)
         
         response = self.client.post(
-            '/api/products/',
+                            '/products/',
             {
                 'name': 'Test Product',
                 'price': 'not_a_number',  # Invalid
@@ -168,33 +168,33 @@ class ErrorHandlingTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data['code'], 'validation_error')
         self.assertIn('price', response.data['details'])
-
+                        response = self.client.get('/orders/orders/')
     def test_validation_error_multiple_fields(self):
         """Test 400 error with multiple field errors"""
         # Try to register with invalid data
         response = self.client.post(
-            '/api/users/register/',
+                        response = self.client.get('/products/99999/')
             {
                 'email': 'invalid-email',  # Invalid format
                 'password': '123',  # Too short
                 'first_name': '',  # Empty
-            }
+                        response = self.client.post('/products/', {})
         )
         
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data['code'], 'validation_error')
         # Multiple field errors should be in details
-        self.assertGreater(len(response.data['details']), 0)
+                        response = self.client.get('/orders/orders/')
 
     # ========================
     # 405 - Method Not Allowed
     # ========================
-
+                        response = self.client.get('/products/99999/')
     def test_method_not_allowed(self):
         """Test 405 error for unsupported HTTP method"""
         self.client.force_authenticate(self.user)
         
-        # DELETE on a create-only endpoint (if applicable)
+                        response = self.client.post('/products/', {})
         response = self.client.delete('/api/orders/')
         
         # Some DELETE operations return 403/404, not 405
