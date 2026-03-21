@@ -13,7 +13,7 @@ class ChatRoomListAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return ChatRoom.objects.filter(Q(customer=user) | Q(vendor=user)).order_by('-id')
+        return ChatRoom.objects.filter(Q(customer=user) | Q(vendor=user)).select_related('customer', 'vendor').order_by('-id')
 
 
 class RoomMessageListAPIView(generics.ListAPIView):
@@ -26,4 +26,4 @@ class RoomMessageListAPIView(generics.ListAPIView):
             ChatRoom.objects.filter(Q(customer=user) | Q(vendor=user)),
             id=self.kwargs['id'],
         )
-        return Message.objects.filter(room=room).select_related('sender').order_by('created_at')
+        return Message.objects.filter(room=room).select_related('sender', 'room').order_by('created_at')
