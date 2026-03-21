@@ -60,6 +60,8 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         cart.items.all().delete()
 
+        NotificationService.notify_order_created(order)
+
         serializer = OrderSerializer(order)
 
         return Response(serializer.data, status=201)
@@ -72,7 +74,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         except Order.DoesNotExist:
             return Response({"error": "Order not found"}, status=404)
 
-        if order.status in ["paid", "pending_shipment"]:
+        if order.status in ["paid", "pending_shipment", "shipped"]:
             return Response(
                 {"error": "Order already paid"},
                 status=400
@@ -115,9 +117,40 @@ class OrderViewSet(viewsets.ModelViewSet):
         order.save()
 
         EmailService.send_order_confirmation(order)
-        NotificationService.notify_vendors(order)
+        NotificationService.notify_payment_success(order)
+        NotificationService.notify_vendors_new_order(order)
 
         return Response({
             "message": "Payment successful",
             "order_status": order.status
         })
+
+    @action(detail=True, methods=["post"])
+    def ship(self, request, pk=None):
+
+        if not (request.user.is_staff or request.user.role == "vendor"):
+            return Response({"error": "Permission denied"}, status=403)
+
+        try:
+            order = self.get_queryset().get(pk=pk)
+        except Order.DoesNotExist:
+            return Response({"error": "Order not found"}, status=404)
+
+        if order.status != "pending_shipment":
+            return Response(
+                {"error": "Only pending shipment orders can be shipped"},
+                status=400,
+            )
+
+        order.status = "shipped"
+        order.save(update_fields=["status"])
+
+        NotificationService.notify_order_shipped(order)
+
+        return Response(
+            {
+                "message": "Order shipped",
+                "order_status": order.status,
+            },
+            status=200,
+        )
