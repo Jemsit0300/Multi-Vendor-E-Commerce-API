@@ -152,6 +152,7 @@ REST_FRAMEWORK = {
         'user': '100/day',
         'login': '10/hour',
     },
+    'EXCEPTION_HANDLER': 'config.exceptions.custom_exception_handler',
 }
 
 SPECTACULAR_SETTINGS = {
