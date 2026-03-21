@@ -60,8 +60,6 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         cart.items.all().delete()
 
-        NotificationService.notify_order_created(order)
-
         serializer = OrderSerializer(order)
 
         return Response(serializer.data, status=201)
