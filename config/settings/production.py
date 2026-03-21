@@ -19,3 +19,46 @@ DATABASES = {
 		'PORT': os.environ.get('DB_PORT', os.environ.get('POSTGRES_PORT', '5432')),
 	}
 }
+
+LOGGING = {
+	'version': 1,
+	'disable_existing_loggers': False,
+	'formatters': {
+		'standard': {
+			'format': '%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+		},
+	},
+	'handlers': {
+		'console': {
+			'class': 'logging.StreamHandler',
+			'formatter': 'standard',
+		},
+		'file': {
+			'class': 'logging.FileHandler',
+			'filename': BASE_DIR / 'django.log',
+			'formatter': 'standard',
+		},
+	},
+	'loggers': {
+		'django': {
+			'handlers': ['console', 'file'],
+			'level': 'INFO',
+			'propagate': True,
+		},
+		'orders': {
+			'handlers': ['console', 'file'],
+			'level': 'INFO',
+			'propagate': False,
+		},
+		'services': {
+			'handlers': ['console', 'file'],
+			'level': 'INFO',
+			'propagate': False,
+		},
+		'chat': {
+			'handlers': ['console', 'file'],
+			'level': 'INFO',
+			'propagate': False,
+		},
+	},
+}
