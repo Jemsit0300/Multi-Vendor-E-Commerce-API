@@ -23,19 +23,14 @@ class OrderViewSet(viewsets.ModelViewSet):
         user = self.request.user
 
         if user.is_staff:
-            return Order.objects.all()
+			return Order.objects.all().select_related('user')
 
-        if user.role == "vendor":
-            return Order.objects.filter(
-                items__product__vendor=user
-            ).distinct()
+		if user.role == "vendor":
+			return Order.objects.filter(
+				items__product__vendor=user
+			).select_related('user').distinct()
 
-        return Order.objects.filter(user=user)
-
-    def create(self, request):
-
-        cart = Cart.objects.filter(user=request.user).first()
-
+		return Order.objects.filter(user=user).select_related('user')
         if not cart:
             return Response({"error": "Cart not found"}, status=400)
 

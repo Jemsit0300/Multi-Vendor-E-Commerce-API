@@ -24,10 +24,10 @@ class ChatRoom(models.Model):
 
 
 class Message(models.Model):
-    room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name='messages')
+    room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name='messages', db_index=True)
     sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     message = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 
     class Meta:
         ordering = ['created_at']
