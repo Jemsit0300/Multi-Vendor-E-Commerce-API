@@ -1,0 +1,44 @@
+version: '3'
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: ecommerce
+      POSTGRES_USER: ecommerce
+      POSTGRES_PASSWORD: ecommerce
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+
+  redis:
+    image: redis:7
+    ports:
+      - '6379:6379'
+
+  web:
+    build: .
+    command: gunicorn config.asgi:application -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      SECRET_KEY: django-insecure-dev-secret-key
+      ALLOWED_HOSTS: '*'
+      POSTGRES_DB: ecommerce
+      POSTGRES_USER: ecommerce
+      POSTGRES_PASSWORD: ecommerce
+      POSTGRES_HOST: db
+      POSTGRES_PORT: '5432'
+      REDIS_HOST: redis
+      REDIS_PORT: '6379'
+      REDIS_CHANNEL_DB: '0'
+      REDIS_CACHE_DB: '1'
+      PRESENCE_REDIS_URL: redis://redis:6379/1
+    depends_on:
+      - db
+      - redis
+    ports:
+      - '8000:8000'
+
+volumes:
+  postgres_data:

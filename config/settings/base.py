@@ -76,11 +76,17 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 ASGI_APPLICATION = 'config.asgi.application'
 
+REDIS_HOST = os.environ.get('REDIS_HOST', '127.0.0.1')
+REDIS_PORT = int(os.environ.get('REDIS_PORT', '6379'))
+REDIS_CHANNEL_DB = os.environ.get('REDIS_CHANNEL_DB', '0')
+REDIS_CACHE_DB = os.environ.get('REDIS_CACHE_DB', '1')
+REDIS_BASE_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}'
+
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            'hosts': [('127.0.0.1', 6379)],
+            'hosts': [f'{REDIS_BASE_URL}/{REDIS_CHANNEL_DB}'],
         },
     },
 }
@@ -161,6 +167,6 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/1",
+        "LOCATION": f"{REDIS_BASE_URL}/{REDIS_CACHE_DB}",
     }
 }

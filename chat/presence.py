@@ -1,10 +1,12 @@
+import os
+
 from redis import Redis
 from redis.exceptions import RedisError
 
 
 ONLINE_USERS_SET = 'presence:online_users'
 USER_CONNECTIONS_KEY = 'presence:user:{user_id}:connections'
-REDIS_URL = 'redis://127.0.0.1:6379/1'
+REDIS_URL = os.environ.get('PRESENCE_REDIS_URL', 'redis://127.0.0.1:6379/1')
 
 
 def _client():
