@@ -2,7 +2,7 @@ from django.conf import settings
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views import CategoryViewSet, ProductImageDeleteView, ProductImageView, ProductViewSet
+from .views import CategoryViewSet, ProductImageDeleteView, ProductImageView, ProductViewSet, TopProductsView
 from django.conf.urls.static import static
 
 
@@ -17,6 +17,11 @@ urlpatterns = [
         "api/products/",
         ProductViewSet.as_view({"get": "list"}),
         name="products-search",
+    ),
+    path(
+        "api/products/top/",
+        TopProductsView.as_view(),
+        name="top-products",
     ),
    
     path(

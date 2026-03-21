@@ -1,5 +1,7 @@
 import django_filters
 from django.db.models import Avg
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from rest_framework import filters
 from rest_framework import permissions, viewsets
 from rest_framework.response import Response
@@ -55,6 +57,10 @@ class ProductViewSet(viewsets.ModelViewSet):
             .annotate(avg_rating=Avg('reviews__rating'))
         )
 
+    @method_decorator(cache_page(60 * 5))
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
 
     def perform_create(self, serializer):
         serializer.save(vendor=self.request.user)
@@ -65,6 +71,31 @@ class CategoryViewSet(viewsets.ModelViewSet):
     permission_classes = [CategoryPermission]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['name']
+
+    @method_decorator(cache_page(60 * 5))
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+
+class TopProductsView(APIView):
+
+    @method_decorator(cache_page(60 * 5))
+    def get(self, request):
+        limit = request.query_params.get('limit', 10)
+        try:
+            limit = max(int(limit), 1)
+        except (TypeError, ValueError):
+            limit = 10
+
+        queryset = (
+            Product.objects
+            .select_related('vendor')
+            .prefetch_related('reviews')
+            .annotate(avg_rating=Avg('reviews__rating'))
+            .order_by('-avg_rating', '-created_at')[:limit]
+        )
+        serializer = ProductSerializer(queryset, many=True)
+        return Response(serializer.data)
 
 class ProductImageView(APIView):
 
