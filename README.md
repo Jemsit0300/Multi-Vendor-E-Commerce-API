@@ -211,6 +211,12 @@ The API uses a global exception handler so frontend receives consistent errors:
 - Role-aware queryset restrictions
 - Structured logging and production settings
 
+## Caching Implementation
+- Backend: Redis (`django.core.cache.backends.redis.RedisCache`)
+- Product list and category list responses are cached to reduce DB load
+- Versioned cache keys are used for safer invalidation after create/update/delete
+- Top products endpoint is cache-backed for faster homepage/read-heavy traffic
+
 ## Testing
 ```bash
 python manage.py test
