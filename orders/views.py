@@ -116,7 +116,6 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         EmailService.send_order_confirmation(order)
         NotificationService.notify_payment_success(order)
-        NotificationService.notify_vendors_new_order(order)
 
         return Response({
             "message": "Payment successful",
