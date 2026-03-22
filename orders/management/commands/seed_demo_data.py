@@ -152,10 +152,12 @@ class Command(BaseCommand):
                 customer.save(update_fields=["role"])
             customers.append(customer)
 
+        existing_demo_orders = Order.objects.filter(user__username__startswith="demo_customer_").count()
+        missing_orders = max(target_count - existing_demo_orders, 0)
         created_orders = 0
         order_statuses = ["created", "pending_shipment", "paid", "shipped"]
 
-        for idx in range(1, target_count + 1):
+        for idx in range(1, missing_orders + 1):
             customer = customers[(idx - 1) % len(customers)]
             status = order_statuses[(idx - 1) % len(order_statuses)]
 

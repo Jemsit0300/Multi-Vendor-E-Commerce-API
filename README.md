@@ -97,6 +97,18 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
+### 8. Seed Demo Data (Optional)
+Create showcase data for demos and recruiter review:
+
+```bash
+python manage.py seed_demo_data --vendors 5 --products 20 --orders 10
+```
+
+Default demo credentials created by the command:
+- Vendor users: `demo_vendor_1` ... `demo_vendor_5`
+- Customer users: `demo_customer_1` ...
+- Password: `DemoPass123!`
+
 API docs:
 - `http://127.0.0.1:8000/api/docs/`
 - `http://127.0.0.1:8000/api/schema/`
