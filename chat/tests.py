@@ -8,6 +8,11 @@ from .models import ChatRoom, Message
 
 
 class ChatAPITestCase(APITestCase):
+    def _get_results(self, response):
+        if isinstance(response.data, dict) and "results" in response.data:
+            return response.data["results"]
+        return response.data
+
     def setUp(self):
         self.customer = User.objects.create_user(
             username='chat-customer',
@@ -44,18 +49,20 @@ class ChatAPITestCase(APITestCase):
 
         self.client.force_authenticate(self.customer)
         response = self.client.get(reverse('chat-room-list'))
+        results = self._get_results(response)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]['id'], self.room.id)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]['id'], self.room.id)
 
     def test_room_messages_returns_for_participant(self):
         self.client.force_authenticate(self.vendor)
         response = self.client.get(reverse('chat-room-messages', kwargs={'id': self.room.id}))
+        results = self._get_results(response)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]['id'], self.message.id)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]['id'], self.message.id)
 
     def test_room_messages_denies_non_participant(self):
         self.client.force_authenticate(self.other_user)
