@@ -4,6 +4,7 @@ from chat.models import ChatRoom, Message
 from products.models import Product
 from services.models import Notification
 from users.models import User
+from vendors.models import Vendor
 
 from .models import Order, OrderItem
 
@@ -28,6 +29,11 @@ class OrderSignalAutomationTestCase(TestCase):
 			price="25.00",
 			stock=10,
 		)
+		self.vendor_profile = Vendor.objects.create(
+			user=self.vendor,
+			store_name="Signal Vendor Store",
+			is_approved=True,
+		)
 
 	def test_order_post_save_sends_customer_notification(self):
 		order = Order.objects.create(
@@ -51,21 +57,22 @@ class OrderSignalAutomationTestCase(TestCase):
 			total_price="50.00",
 		)
 
-		OrderItem.objects.create(
-			order=order,
-			product=self.product,
-			vendor=self.vendor,
-			quantity=1,
-			price="25.00",
-		)
-		# Same vendor appears twice in the order, automation should still run once.
-		OrderItem.objects.create(
-			order=order,
-			product=self.product,
-			vendor=self.vendor,
-			quantity=1,
-			price="25.00",
-		)
+		with self.captureOnCommitCallbacks(execute=True):
+			OrderItem.objects.create(
+				order=order,
+				product=self.product,
+				vendor=self.vendor_profile,
+				quantity=1,
+				price="25.00",
+			)
+			# Same vendor appears twice in the order, automation should still run once.
+			OrderItem.objects.create(
+				order=order,
+				product=self.product,
+				vendor=self.vendor_profile,
+				quantity=1,
+				price="25.00",
+			)
 
 		self.assertEqual(
 			Notification.objects.filter(

@@ -8,6 +8,11 @@ from .models import Notification
 
 
 class NotificationAPITestCase(APITestCase):
+	def _get_results(self, response):
+		if isinstance(response.data, dict) and "results" in response.data:
+			return response.data["results"]
+		return response.data
+
 	def setUp(self):
 		self.user = User.objects.create_user(
 			username="notify-user",
@@ -39,10 +44,11 @@ class NotificationAPITestCase(APITestCase):
 
 		self.client.force_authenticate(self.user)
 		response = self.client.get(reverse("notifications-list"))
+		results = self._get_results(response)
 
 		self.assertEqual(response.status_code, status.HTTP_200_OK)
-		self.assertEqual(len(response.data), 1)
-		self.assertEqual(response.data[0]["id"], self.notification.id)
+		self.assertEqual(len(results), 1)
+		self.assertEqual(results[0]["id"], self.notification.id)
 
 	def test_mark_notification_as_read(self):
 		self.client.force_authenticate(self.user)
