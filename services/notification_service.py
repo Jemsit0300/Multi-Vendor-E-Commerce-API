@@ -39,13 +39,17 @@ class NotificationService:
             if vendor.id in notified_vendors:
                 continue
 
-            Notification.objects.create(
-                user=vendor,
-                type="order",
-                message=f"You received a new order #{order.id}"
-            )
+            NotificationService.notify_vendor_new_order(order, vendor)
 
             notified_vendors.add(vendor.id)
+
+    @staticmethod
+    def notify_vendor_new_order(order, vendor):
+        Notification.objects.create(
+            user=vendor,
+            type="order",
+            message=f"You received a new order #{order.id}",
+        )
 
     @staticmethod
     def notify_vendors(order):

@@ -1,7 +1,6 @@
 import django_filters
+from django.core.cache import cache
 from django.db.models import Avg
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
 from rest_framework import filters
 from rest_framework import permissions, viewsets
 from rest_framework.response import Response
@@ -14,6 +13,29 @@ from .permissions import CategoryPermission, ProductPermission
 from .serializers import CategorySerializer, MultipleImageUploadSerializer, ProductImageSerializer, ProductSerializer
 from rest_framework.generics import DestroyAPIView
 from django_filters.rest_framework import DjangoFilterBackend
+
+
+CACHE_TIMEOUT = 60 * 5
+PRODUCT_LIST_VERSION_KEY = "product_list_version"
+CATEGORY_LIST_VERSION_KEY = "category_list_version"
+TOP_PRODUCTS_VERSION_KEY = "top_products_version"
+
+
+def _get_cache_version(key):
+    return cache.get_or_set(key, 1, None)
+
+
+def _bump_cache_version(key):
+    try:
+        cache.incr(key)
+    except ValueError:
+        cache.set(key, 2, None)
+
+
+def invalidate_product_related_cache():
+    _bump_cache_version(PRODUCT_LIST_VERSION_KEY)
+    _bump_cache_version(CATEGORY_LIST_VERSION_KEY)
+    _bump_cache_version(TOP_PRODUCTS_VERSION_KEY)
 
 
 class ProductFilter(django_filters.FilterSet):
@@ -37,6 +59,7 @@ class ProductCreateView(APIView):
         serializer = ProductSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(vendor=request.user)
+            invalidate_product_related_cache()
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
 
@@ -57,13 +80,29 @@ class ProductViewSet(viewsets.ModelViewSet):
             .annotate(avg_rating=Avg('reviews__rating'))
         )
 
-    @method_decorator(cache_page(60 * 5))
     def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
+        version = _get_cache_version(PRODUCT_LIST_VERSION_KEY)
+        cache_key = f"product_list:v{version}:{request.get_full_path()}"
+        cached_data = cache.get(cache_key)
+        if cached_data is not None:
+            return Response(cached_data)
+
+        response = super().list(request, *args, **kwargs)
+        cache.set(cache_key, response.data, CACHE_TIMEOUT)
+        return response
 
 
     def perform_create(self, serializer):
         serializer.save(vendor=self.request.user)
+        invalidate_product_related_cache()
+
+    def perform_update(self, serializer):
+        serializer.save()
+        invalidate_product_related_cache()
+
+    def perform_destroy(self, instance):
+        instance.delete()
+        invalidate_product_related_cache()
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
@@ -72,15 +111,27 @@ class CategoryViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['name']
 
-    @method_decorator(cache_page(60 * 5))
     def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
+        version = _get_cache_version(CATEGORY_LIST_VERSION_KEY)
+        cache_key = f"category_list:v{version}:{request.get_full_path()}"
+        cached_data = cache.get(cache_key)
+        if cached_data is not None:
+            return Response(cached_data)
+
+        response = super().list(request, *args, **kwargs)
+        cache.set(cache_key, response.data, CACHE_TIMEOUT)
+        return response
 
 
 class TopProductsView(APIView):
 
-    @method_decorator(cache_page(60 * 5))
     def get(self, request):
+        version = _get_cache_version(TOP_PRODUCTS_VERSION_KEY)
+        cache_key = f"top_products:v{version}:{request.get_full_path()}"
+        cached_data = cache.get(cache_key)
+        if cached_data is not None:
+            return Response(cached_data)
+
         limit = request.query_params.get('limit', 10)
         try:
             limit = max(int(limit), 1)
@@ -95,6 +146,7 @@ class TopProductsView(APIView):
             .order_by('-avg_rating', '-created_at')[:limit]
         )
         serializer = ProductSerializer(queryset, many=True)
+        cache.set(cache_key, serializer.data, CACHE_TIMEOUT)
         return Response(serializer.data)
 
 class ProductImageView(APIView):

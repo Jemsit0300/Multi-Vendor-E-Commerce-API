@@ -27,8 +27,8 @@ class VendorListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         if self.request.user.is_staff:
-            return Vendor.objects.all().order_by("-created_at")
-        return Vendor.objects.filter(user=self.request.user)
+            return Vendor.objects.all().select_related('user').order_by("-created_at")
+        return Vendor.objects.filter(user=self.request.user).select_related('user')
 
     def perform_create(self, serializer):
         if self.request.user.is_staff:

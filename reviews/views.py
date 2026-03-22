@@ -25,7 +25,7 @@ class ProductReviewListCreateAPIView(ListCreateAPIView):
 
 	def get_queryset(self):
 		product = get_object_or_404(Product, id=self.kwargs["id"])
-		return Review.objects.filter(product=product).order_by("-created_at")
+		return Review.objects.filter(product=product).select_related('user', 'product').order_by("-created_at")
 
 	def create(self, request, *args, **kwargs):
 		product = get_object_or_404(Product, id=kwargs["id"])
