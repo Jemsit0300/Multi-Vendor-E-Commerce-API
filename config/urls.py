@@ -1,6 +1,13 @@
 from django.contrib import admin
+from django.http import JsonResponse
 from django.urls import include, path
+from django.views.decorators.http import require_GET
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+
+
+@require_GET
+def health_check(request):
+    return JsonResponse({'status': 'healthy', 'message': 'API is running'})
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -16,6 +23,7 @@ urlpatterns = [
 
     
     # API documentation
+    path('api/health/', health_check, name='health-check'),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
 ]
