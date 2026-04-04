@@ -11,8 +11,6 @@ ENV/
 
 # Environment and local settings
 .env
-.env.*
-*.env
 
 # Django / local runtime artifacts
 db.sqlite3
