@@ -2,11 +2,11 @@
 Description=E-Commerce API Docker Compose Application
 Requires=docker.service
 After=docker.service
-Documentation=file:///opt/ecommerce/DEPLOYMENT_GUIDE.md
+Documentation=file:///opt/ecommerce/Multi-Vendor-E-Commerce-API/DEPLOYMENT_GUIDE.md
 
 [Service]
 Type=oneshot
-WorkingDirectory=/opt/ecommerce
+WorkingDirectory=/opt/ecommerce/Multi-Vendor-E-Commerce-API
 User=root
 Group=root
 
